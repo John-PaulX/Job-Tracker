@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Application Tracker</title>
+
+    <!--
+        All CSS is written inside <style> tags.
+        No external CSS file needed - everything is in this one file.
+        CSS variables at the top make it easy to change colors everywhere at once.
+    -->
+    <style>
+        /* CSS Variables - define colors once, use everywhere */
+        :root {
+            --primary: #4F46E5;      /* indigo - main brand color */
+            --primary-dark: #3730A3;
+            --success: #059669;      /* green - for OFFERED status */
+            --warning: #D97706;      /* amber - for INTERVIEW status */
+            --danger: #DC2626;       /* red - for REJECTED status */
+            --info: #2563EB;         /* blue - for APPLIED status */
+            --bg: #F1F5F9;           /* light gray background */
+            --card: #FFFFFF;         /* white cards */
+            --text: #1E293B;         /* dark text */
+            --text-light: #64748B;   /* lighter text for labels */
+            --border: #E2E8F0;       /* light border color */
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+        }
+
+        /* Reset default browser styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; /* padding doesn't add to width */
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── TOP NAVIGATION BAR ─────────────────────────── */
+        .navbar {
+            background: var(--primary);
+            padding: 0 2rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-md);
+            position: sticky; /* stays at top when scrolling */
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-brand span {
+            font-size: 1.5rem; /* emoji size */
+        }
+
+        .navbar-subtitle {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.8rem;
+        }
+
+        /* ── MAIN CONTENT WRAPPER ───────────────────────── */
+        .container {
+            max-width: 1200px;    /* don't stretch too wide on large screens */
+            margin: 0 auto;       /* center horizontally */
+            padding: 2rem 1.5rem;
+        }
+
+        /* ── DASHBOARD STATS CARDS ──────────────────────── */
+        /* CSS Grid - automatically creates 5 equal columns */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
+            border-left: 4px solid;  /* colored left border for visual identity */
+            transition: transform 0.2s; /* smooth hover animation */
+        }
+
+        /* lift card on hover */
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Each stat card gets a different left border color */
+        .stat-card.total    { border-color: var(--primary); }
+        .stat-card.applied  { border-color: var(--info); }
+        .stat-card.interview{ border-color: var(--warning); }
+        .stat-card.offered  { border-color: var(--success); }
+        .stat-card.rejected { border-color: var(--danger); }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-card.total    .stat-number { color: var(--primary); }
+        .stat-card.applied  .stat-number { color: var(--info); }
+        .stat-card.interview .stat-number { color: var(--warning); }
+        .stat-card.offered  .stat-number { color: var(--success); }
+        .stat-card.rejected .stat-number { color: var(--danger); }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── ADD APPLICATION FORM CARD ──────────────────── */
+        .form-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 1.75rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Form grid - 3 columns on desktop */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        /* span-2 makes an element take 2 columns instead of 1 */
+        .form-group.span-2 {
+            grid-column: span 2;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* Shared styles for input, select, textarea */
+        input, select, textarea {
+            padding: 0.6rem 0.875rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            color: var(--text);
+            background: white;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        /* Blue border when input is focused */
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+        }
+
+        textarea {
+            resize: vertical; /* only allow vertical resize */
+            min-height: 70px;
+        }
+
+        /* ── BUTTONS ────────────────────────────────────── */
+        .btn {
+            padding: 0.6rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover { background: var(--primary-dark); }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-sm {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        /* ── SEARCH AND FILTER BAR ──────────────────────── */
+        .toolbar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* The search icon positioned inside the input */
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.875rem;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding-left: 2.25rem; /* make room for the icon */
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Filter tab buttons */
+        .tab {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-light);
+        }
+
+        /* Active/selected tab */
+        .tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* ── APPLICATIONS TABLE ─────────────────────────── */
+        .table-card {
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden; /* rounded corners clip the table */
+        }
+
+        .table-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Makes table fill its container width */
+        table {
+            width: 100%;
+            border-collapse: collapse; /* removes double borders */
+        }
+
+        th {
+            background: #F8FAFC;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+            vertical-align: middle;
+        }
+
+        /* Subtle hover effect on table rows */
+        tr:hover td {
+            background: #F8FAFC;
+        }
+
+        /* Remove border from last row */
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ── STATUS BADGES ──────────────────────────────── */
+        /* Small colored pills showing the application status */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-applied   { background: #DBEAFE; color: #1D4ED8; }
+        .badge-interview { background: #FEF3C7; color: #92400E; }
+        .badge-offered   { background: #D1FAE5; color: #065F46; }
+        .badge-rejected  { background: #FEE2E2; color: #991B1B; }
+
+        /* ── STATUS DROPDOWN IN TABLE ───────────────────── */
+        .status-select {
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
+            border: 1.5px solid var(--border);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+        }
+
+        /* ── ACTION BUTTONS IN TABLE ────────────────────── */
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* ── EMPTY STATE ────────────────────────────────── */
+        /* Shows when there are no applications yet */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-light);
+        }
+
+        .empty-state .emoji {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        /* ── TOAST NOTIFICATION ─────────────────────────── */
+        /* Small popup message that appears briefly */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #1E293B;
+            color: white;
+            padding: 0.875rem 1.25rem;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-md);
+            transform: translateY(100px); /* hidden below screen */
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        /* When toast has 'show' class, it slides up into view */
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error   { border-left: 4px solid var(--danger); }
+
+        /* ── MODAL (Edit popup) ──────────────────────────── */
+        /* Dark overlay behind the modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0; /* top:0, right:0, bottom:0, left:0 */
+            background: rgba(0,0,0,0.5);
+            display: none; /* hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        /* When modal-overlay has 'show' class, display as flex */
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto; /* scroll if content is tall */
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* X button to close modal */
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 0.25rem;
+        }
+
+        /* ── RESPONSIVE (mobile friendly) ──────────────── */
+        /* On small screens, stack columns vertically */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-group.span-2 {
+                grid-column: span 1;
+            }
+            table { font-size: 0.8rem; }
+            td, th { padding: 0.6rem 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── NAVBAR ──────────────────────────────────────────── -->
+<nav class="navbar">
+    <div class="navbar-brand">
+        <span>💼</span>
+        <div>
+            Job Application Tracker
+            <div class="navbar-subtitle">Track your journey to success</div>
+        </div>
+    </div>
+    <!-- Shows today's date in the navbar -->
+    <div style="color:rgba(255,255,255,0.8); font-size:0.85rem;" id="todayDate"></div>
+</nav>
+
+<!-- ── MAIN CONTENT ─────────────────────────────────────── -->
+<div class="container">
+
+    <!-- DASHBOARD STATS -->
+    <div class="stats-grid">
+        <div class="stat-card total">
+            <div class="stat-number" id="stat-total">0</div>
+            <div class="stat-label">Total Applied</div>
+        </div>
+        <div class="stat-card applied">
+            <div class="stat-number" id="stat-applied">0</div>
+            <div class="stat-label">Applied</div>
+        </div>
+        <div class="stat-card interview">
+            <div class="stat-number" id="stat-interview">0</div>
+            <div class="stat-label">Interviews</div>
+        </div>
+        <div class="stat-card offered">
+            <div class="stat-number" id="stat-offered">0</div>
+            <div class="stat-label">Offers</div>
+        </div>
+        <div class="stat-card rejected">
+            <div class="stat-number" id="stat-rejected">0</div>
+            <div class="stat-label">Rejected</div>
+        </div>
+    </div>
+
+    <!-- ADD APPLICATION FORM -->
+    <div class="form-card">
+        <div class="section-title">➕ Add New Application</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Company Name *</label>
+                <input type="text" id="companyName" placeholder="e.g. Google, Amazon...">
+            </div>
+            <div class="form-group">
+                <label>Job Role *</label>
+                <input type="text" id="jobRole" placeholder="e.g. Java Developer...">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <!-- Dropdown for selecting status -->
+                <select id="status">
+                    <option value="APPLIED">Applied</option>
+                    <option value="INTERVIEW">Interview</option>
+                    <option value="OFFERED">Offered</option>
+                    <option value="REJECTED">Rejected</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="location" placeholder="e.g. Hyderabad, Remote...">
+            </div>
+            <div class="form-group">
+                <label>Salary Range</label>
+                <input type="text" id="salaryRange" placeholder="e.g. 4-6 LPA">
+            </div>
+            <div class="form-group">
+                <label>Date Applied</label>
+                <input type="date" id="appliedDate">
+            </div>
+            <div class="form-group span-2">
+                <label>Notes</label>
+                <textarea id="notes" placeholder="Any notes about this application..."></textarea>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-secondary" onclick="clearForm()">Clear</button>
+            <button class="btn btn-primary" onclick="addApplication()">
+                ➕ Add Application
+            </button>
+        </div>
+    </div>
+
+    <!-- SEARCH AND FILTER -->
+    <div class="toolbar">
+        <div class="search-box">
+            <input type="text" id="searchInput"
+                   placeholder="Search by company name..."
+                   oninput="handleSearch()">
+        </div>
+        <div class="filter-tabs">
+            <button class="tab active" onclick="filterBy('ALL', this)">All</button>
+            <button class="tab" onclick="filterBy('APPLIED', this)">Applied</button>
+            <button class="tab" onclick="filterBy('INTERVIEW', this)">Interview</button>
+            <button class="tab" onclick="filterBy('OFFERED', this)">Offered</button>
+            <button class="tab" onclick="filterBy('REJECTED', this)">Rejected</button>
+        </div>
+    </div>
+
+    <!-- APPLICATIONS TABLE -->
+    <div class="table-card">
+        <div class="table-header">
+            <div class="section-title" style="margin:0">📋 Applications</div>
+            <span style="color:var(--text-light);font-size:0.85rem"
+                  id="resultCount">0 applications</span>
+        </div>
+        <div id="tableContainer">
+            <!-- Table is built dynamically by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- ── EDIT MODAL ──────────────────────────────────────── -->
+<!-- This popup appears when you click Edit on a row -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal">
+        <div class="modal-title">
+            ✏️ Edit Application
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="form-grid">
+            <input type="hidden" id="editId"> <!-- hidden field stores the ID -->
+            <div class="form-group">
+                <label>Company Name *</label>
+                <input type="text" id="editCompanyName">
+            </div>
+            <div class="form-group">
+                <label>Job Role *</label>
+                <input type="text" id="editJobRole">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="editStatus">
+                    <option value="APPLIED">Applied</option>
+                    <option value="INTERVIEW">Interview</option>
+                    <option value="OFFERED">Offered</option>
+                    <option value="REJECTED">Rejected</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="editLocation">
+            </div>
+            <div class="form-group">
+                <label>Salary Range</label>
+                <input type="text" id="editSalaryRange">
+            </div>
+            <div class="form-group span-2">
+                <label>Notes</label>
+                <textarea id="editNotes"></textarea>
+            </div>
+        </div>
+        <div class="form-actions" style="margin-top:1rem">
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveEdit()">💾 Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── TOAST NOTIFICATION ─────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<!--
+    JavaScript section - all the logic that makes the page interactive
+    fetch() is the browser's built-in function to make HTTP requests to the backend
+    async/await makes asynchronous code readable (like synchronous code)
+-->
+<script>
+    // The base URL of your Spring Boot backend
+    // All API calls will start with this URL
+    const API = 'http://localhost:8080/api/applications';
+
+    // This array holds all applications loaded from the backend
+    // We keep a local copy so we can filter without re-fetching every time
+    let allApplications = [];
+
+    // ── INIT ─────────────────────────────────────────────
+    // This runs as soon as the page loads
+    // It loads all data from the backend
+    window.onload = function() {
+        // Show today's date in the navbar
+        document.getElementById('todayDate').textContent =
+            new Date().toLocaleDateString('en-IN', {
+                weekday: 'long', year: 'numeric',
+                month: 'long', day: 'numeric'
+            });
+
+        // Set today's date as default in the date picker
+        document.getElementById('appliedDate').value =
+            new Date().toISOString().split('T')[0];
+
+        // Load data from backend
+        loadApplications();
+        loadStats();
+    };
+
+    // ── LOAD ALL APPLICATIONS ────────────────────────────
+    // async function = it can use 'await' to wait for API response
+    async function loadApplications() {
+        try {
+            // fetch() sends a GET request to the backend URL
+            // await means: wait here until the response comes back
+            const response = await fetch(API);
+
+            // response.json() converts the JSON text to a JavaScript array
+            const data = await response.json();
+
+            // Store in our local array
+            allApplications = data;
+
+            // Render the table with the data
+            renderTable(data);
+        } catch (error) {
+            // If the backend is not running or there's a network error
+            console.error('Error loading applications:', error);
+            showToast('Could not connect to server', 'error');
+        }
+    }
+
+    // ── LOAD DASHBOARD STATS ─────────────────────────────
+    async function loadStats() {
+        try {
+            // GET /api/applications/stats returns the count object
+            const response = await fetch(`${API}/stats`);
+            const stats = await response.json();
+
+            // Update each stat card number on the page
+            // stats.TOTAL, stats.APPLIED etc. come from the backend Map
+            document.getElementById('stat-total').textContent     = stats.TOTAL     || 0;
+            document.getElementById('stat-applied').textContent   = stats.APPLIED   || 0;
+            document.getElementById('stat-interview').textContent = stats.INTERVIEW || 0;
+            document.getElementById('stat-offered').textContent   = stats.OFFERED   || 0;
+            document.getElementById('stat-rejected').textContent  = stats.REJECTED  || 0;
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    }
+
+    // ── RENDER TABLE ─────────────────────────────────────
+    // Takes an array of applications and builds the HTML table
+    function renderTable(applications) {
+        const container = document.getElementById('tableContainer');
+
+        // Update the result count text
+        document.getElementById('resultCount').textContent =
+            `${applications.length} application${applications.length !== 1 ? 's' : ''}`;
+
+        // If no applications, show empty state
+        if (applications.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="emoji">📭</div>
+                    <h3>No applications found</h3>
+                    <p>Add your first job application above to get started!</p>
+                </div>`;
+            return;
+        }
+
+        // Build the table HTML using template literals (backtick strings)
+        // map() converts each application object to a table row HTML string
+        // join('') combines all rows into one string
+        container.innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Company</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                        <th>Salary</th>
+                        <th>Date Applied</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${applications.map((app, index) => `
+                        <tr>
+                            <td style="color:var(--text-light);font-weight:600">${index + 1}</td>
+                            <td><strong>${app.companyName}</strong></td>
+                            <td>${app.jobRole}</td>
+                            <td>${getBadge(app.status)}</td>
+                            <td>${app.location || '—'}</td>
+                            <td>${app.salaryRange || '—'}</td>
+                            <td>${formatDate(app.appliedDate)}</td>
+                            <td>
+                                <div class="actions">
+                                    <button class="btn btn-secondary btn-sm"
+                                            onclick="openEditModal(${app.id})">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="btn btn-danger btn-sm"
+                                            onclick="deleteApplication(${app.id})">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+    }
+
+    // ── ADD APPLICATION ───────────────────────────────────
+    async function addApplication() {
+        // Read values from the form fields
+        const companyName = document.getElementById('companyName').value.trim();
+        const jobRole     = document.getElementById('jobRole').value.trim();
+
+        // Validate required fields before sending to backend
+        if (!companyName || !jobRole) {
+            showToast('Company name and job role are required!', 'error');
+            return;
+        }
+
+        // Build the request body object - this becomes the JSON sent to backend
+        const application = {
+            companyName: companyName,
+            jobRole:     jobRole,
+            status:      document.getElementById('status').value,
+            location:    document.getElementById('location').value.trim(),
+            salaryRange: document.getElementById('salaryRange').value.trim(),
+            appliedDate: document.getElementById('appliedDate').value || null,
+            notes:       document.getElementById('notes').value.trim()
+        };
+
+        try {
+            // fetch() with method: 'POST' sends data to create a new resource
+            const response = await fetch(API, {
+                method: 'POST',
+                // Content-Type tells the backend we're sending JSON
+                headers: { 'Content-Type': 'application/json' },
+                // JSON.stringify converts JS object to JSON string
+                body: JSON.stringify(application)
+            });
+
+            if (response.ok) {
+                showToast('✅ Application added successfully!', 'success');
+                clearForm();
+                // Reload both table and stats to show updated data
+                loadApplications();
+                loadStats();
+            } else {
+                showToast('Failed to add application', 'error');
+            }
+        } catch (error) {
+            showToast('Could not connect to server', 'error');
+        }
+    }
+
+    // ── OPEN EDIT MODAL ───────────────────────────────────
+    // When Edit is clicked, find the application data and fill the modal form
+    function openEditModal(id) {
+        // Find the application in our local array by ID
+        // find() returns the first element that matches the condition
+        const app = allApplications.find(a => a.id === id);
+        if (!app) return;
+
+        // Fill all modal form fields with the application's current values
+        document.getElementById('editId').value          = app.id;
+        document.getElementById('editCompanyName').value = app.companyName;
+        document.getElementById('editJobRole').value     = app.jobRole;
+        document.getElementById('editStatus').value      = app.status;
+        document.getElementById('editLocation').value    = app.location    || '';
+        document.getElementById('editSalaryRange').value = app.salaryRange || '';
+        document.getElementById('editNotes').value       = app.notes       || '';
+
+        // Show the modal by adding 'show' class
+        document.getElementById('editModal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('editModal').classList.remove('show');
+    }
+
+    // ── SAVE EDIT ─────────────────────────────────────────
+    async function saveEdit() {
+        const id = document.getElementById('editId').value;
+
+        const updated = {
+            companyName: document.getElementById('editCompanyName').value.trim(),
+            jobRole:     document.getElementById('editJobRole').value.trim(),
+            status:      document.getElementById('editStatus').value,
+            location:    document.getElementById('editLocation').value.trim(),
+            salaryRange: document.getElementById('editSalaryRange').value.trim(),
+            notes:       document.getElementById('editNotes').value.trim()
+        };
+
+        try {
+            // PUT request to update the application with the given ID
+            // URL becomes: /api/applications/5 (for example)
+            const response = await fetch(`${API}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updated)
+            });
+
+            if (response.ok) {
+                showToast('✅ Application updated!', 'success');
+                closeModal();
+                loadApplications();
+                loadStats();
+            } else {
+                showToast('Failed to update', 'error');
+            }
+        } catch (error) {
+            showToast('Could not connect to server', 'error');
+        }
+    }
+
+    // ── DELETE APPLICATION ────────────────────────────────
+    async function deleteApplication(id) {
+        // Ask user to confirm before deleting
+        if (!confirm('Are you sure you want to delete this application?')) return;
+
+        try {
+            // DELETE request to remove the application
+            const response = await fetch(`${API}/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                showToast('🗑️ Application deleted', 'success');
+                loadApplications();
+                loadStats();
+            } else {
+                showToast('Failed to delete', 'error');
+            }
+        } catch (error) {
+            showToast('Could not connect to server', 'error');
+        }
+    }
+
+    // ── FILTER BY STATUS ──────────────────────────────────
+    function filterBy(status, clickedTab) {
+        // Update which tab looks active
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        clickedTab.classList.add('active');
+
+        // Filter the local array (no API call needed - data already in memory)
+        if (status === 'ALL') {
+            renderTable(allApplications);
+        } else {
+            const filtered = allApplications.filter(app => app.status === status);
+            renderTable(filtered);
+        }
+    }
+
+    // ── SEARCH ────────────────────────────────────────────
+    function handleSearch() {
+        const keyword = document.getElementById('searchInput').value.toLowerCase();
+
+        if (keyword === '') {
+            renderTable(allApplications);
+            return;
+        }
+
+        // Filter locally - case insensitive search on company name
+        const filtered = allApplications.filter(app =>
+            app.companyName.toLowerCase().includes(keyword)
+        );
+        renderTable(filtered);
+    }
+
+    // ── HELPER: GET STATUS BADGE HTML ─────────────────────
+    // Returns the colored badge HTML for a given status string
+    function getBadge(status) {
+        const badges = {
+            'APPLIED':   '<span class="badge badge-applied">🔵 Applied</span>',
+            'INTERVIEW': '<span class="badge badge-interview">🟡 Interview</span>',
+            'OFFERED':   '<span class="badge badge-offered">🟢 Offered</span>',
+            'REJECTED':  '<span class="badge badge-rejected">🔴 Rejected</span>'
+        };
+        // Return matching badge or a default if status unknown
+        return badges[status] || `<span class="badge">${status}</span>`;
+    }
+
+    // ── HELPER: FORMAT DATE ───────────────────────────────
+    // Converts "2024-01-15" array format from Java to "15 Jan 2024"
+    function formatDate(dateVal) {
+        if (!dateVal) return '—';
+        try {
+            // Java's LocalDate comes as [2024, 1, 15] array in JSON
+            let dateStr;
+            if (Array.isArray(dateVal)) {
+                const [y, m, d] = dateVal;
+                dateStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            } else {
+                dateStr = dateVal;
+            }
+            return new Date(dateStr).toLocaleDateString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric'
+            });
+        } catch { return dateVal; }
+    }
+
+    // ── HELPER: SHOW TOAST ────────────────────────────────
+    // Shows a brief popup message at the bottom right
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast ${type} show`; // add 'show' class to animate in
+
+        // After 3 seconds, remove 'show' class to animate out
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    // ── HELPER: CLEAR FORM ────────────────────────────────
+    function clearForm() {
+        ['companyName','jobRole','location','salaryRange','notes'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('status').value = 'APPLIED';
+        document.getElementById('appliedDate').value =
+            new Date().toISOString().split('T')[0];
+    }
+
+    // Close modal if user clicks outside it
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+</script>
+</body>
+</html>
