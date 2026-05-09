@@ -4,7 +4,8 @@ A full-stack web application to track job applications, manage
 interview stages, and monitor your job search progress with a
 real-time dashboard.
 
-🔗 **Live Repository:** https://github.com/John-PaulX/Job-Tracker
+🔗 **Live Demo:** https://job-tracker-production-dd62.up.railway.app
+🔗 **Source Code:** https://github.com/John-PaulX/Job-Tracker
 
 ---
 
@@ -14,9 +15,23 @@ As a fresher actively applying for jobs, I was struggling to keep
 track of all my applications across multiple companies. I built
 this tool to solve that real problem — a clean, simple web app
 where I can add every application, update its status as I progress
-through interviews, and see my overall job search statistics at a glance.
+through interviews, and see my overall job search statistics at a glance. 
+This application is now deployed in production using Railway and accessible publicly on the internet.
 
 ---
+
+## 📸 Application Preview
+
+Screenshot 1:
+
+### Dashboard:
+<img width="1886" height="918" alt="Dashboard" src="https://github.com/user-attachments/assets/5a94c225-d1c8-4b1e-95d3-3f3ac415a9ee" />
+
+Screenshot 2:
+
+### Added Application Entries:
+<img width="1912" height="376" alt="Applications" src="https://github.com/user-attachments/assets/eecf4fc7-4d54-4a86-95e8-6b586bcf6eb8" />
+
 
 ## ✨ Features
 
@@ -53,21 +68,36 @@ through interviews, and see my overall job search statistics at a glance.
 
 ---
 
+## ☁️ Deployment
+
+This application is deployed on Railway with MySQL cloud database.
+
+Deployment workflow:
+
+IntelliJ IDEA → Git → GitHub → Railway CI/CD → Live Production
+
+Whenever code is pushed to GitHub, Railway automatically:
+- Pulls latest code
+- Builds the Maven project
+- Creates the JAR file
+- Deploys the latest version automatically
+
+---
+
 ## 🏗️ Project Architecture
 The backend follows a clean 3-layer architecture:
 
+```text
 HTTP Request
-↓
+     ↓
 Controller Layer (@RestController)
-→ Receives HTTP requests, returns JSON responses
-↓
+     ↓
 Service Layer (@Service)
-→ Business logic and validation
-↓
+     ↓
 Repository Layer (@Repository)
-→ Database operations via Spring Data JPA
-↓
+     ↓
 MySQL Database
+```
 
 ### Project Structure
 src/main/java/com/jobtracker/job_tracker/
@@ -143,6 +173,21 @@ http://localhost:8080
 
 ---
 
+## 🔐 Production Configuration
+
+For production deployment, sensitive credentials are managed using environment variables:
+
+```env
+MYSQL_URL=
+MYSQLUSER=
+MYSQLPASSWORD=
+PORT=
+```
+
+This keeps database credentials secure and prevents exposing secrets in source code.
+
+---
+
 ## 📊 Database Schema
 
 ```sql
@@ -168,6 +213,10 @@ CREATE TABLE job_applications (
 - HTTP methods — GET, POST, PUT, PATCH, DELETE and when to use each
 - Git version control and pushing projects to GitHub
 - Handling CORS to allow frontend-backend communication
+- Deploying Spring Boot applications to cloud platforms
+- Using environment variables for secure production configuration
+- Setting up CI/CD pipeline using GitHub + Railway
+- Debugging production API issues
 
 ---
 
@@ -176,7 +225,6 @@ CREATE TABLE job_applications (
 - Add user authentication with Spring Security and JWT tokens
 - Email notifications when interview is scheduled
 - Export applications to PDF or Excel
-- Deploy to cloud platform (AWS / Railway / Render)
 - Add pagination for large number of applications
 
 ---
