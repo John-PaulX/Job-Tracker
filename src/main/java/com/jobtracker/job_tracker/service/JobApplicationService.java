@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.jobtracker.job_tracker.exception.ResourceNotFoundException;
 
 @Service
 public class JobApplicationService {
@@ -36,7 +37,8 @@ public class JobApplicationService {
 
     public JobApplication getApplicationById(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Application not found with id: " + id));
     }
 
     public List<JobApplication> getByStatus(ApplicationStatus status) {
@@ -65,7 +67,8 @@ public class JobApplicationService {
     @Transactional
     public void deleteApplication(Long id) {
         if (!repository.existsById(id)) {
-            throw new RuntimeException("Application not found with id: " + id);
+            throw new ResourceNotFoundException(
+                    "Application not found with id: " + id);
         }
         repository.deleteById(id);
     }
