@@ -104,19 +104,22 @@ POST /api/applications   → Protected — requires valid JWT token
 ---
 
 ## 🏗️ Project Architecture
+```text
 HTTP Request
-↓
+     ↓
 Spring Security Filter Chain
-↓ (validates JWT token)
+     ↓ (validates JWT token)
 Controller Layer (@RestController)
-↓ (handles HTTP requests)
+     ↓ (handles HTTP requests)
 Service Layer (@Service)
-↓ (business logic)
+     ↓ (business logic)
 Repository Layer (@Repository)
-↓ (database operations)
+     ↓ (database operations)
 MySQL Database
+```
 
 ### Project Structure
+```text
 src/main/java/com/jobtracker/job_tracker/
 ├── controller/
 │   ├── AuthController.java          → /api/auth/register, /api/auth/login
@@ -150,7 +153,7 @@ src/main/resources/
 ├── static/
 │   └── index.html                   → Complete frontend (HTML+CSS+JS)
 └── application.properties           → App configuration
-
+```
 ---
 
 ## 🔌 REST API Endpoints
