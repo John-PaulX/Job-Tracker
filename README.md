@@ -1,22 +1,23 @@
 # 💼 Job Application Tracker
 
-A full-stack web application to track job applications, manage
-interview stages, and monitor your job search progress with a
-real-time dashboard.
+A full-stack web application to track job applications, manage interview 
+stages, and monitor your job search progress with a real-time dashboard.
 
-🔗 **Live Demo:** https://job-tracker-production-dd62.up.railway.app
-🔗 **Source Code:** https://github.com/John-PaulX/Job-Tracker
+🔗 **Live Demo:** https://job-tracker-production-dd62.up.railway.app  
+💻 **GitHub:** https://github.com/John-PaulX/Job-Tracker
 
 ---
 
 ## 📌 About The Project
 
-As a fresher actively applying for jobs, I was struggling to keep
-track of all my applications across multiple companies. I built
-this tool to solve that real problem — a clean, simple web app
-where I can add every application, update its status as I progress
-through interviews, and see my overall job search statistics at a glance. 
-This application is now deployed in production using Railway and accessible publicly on the internet.
+As a fresher actively applying for jobs, I was struggling to keep track 
+of all my applications across multiple companies. I built this tool to 
+solve that real problem — a clean, simple web app where I can add every 
+application, update its status as I progress through interviews, and see 
+my overall job search statistics at a glance.
+
+The application includes full JWT-based authentication — users register 
+and login securely, with passwords stored using BCrypt hashing.
 
 ---
 
@@ -32,11 +33,14 @@ Screenshot 2:
 ### Added Application Entries:
 <img width="1912" height="376" alt="Applications" src="https://github.com/user-attachments/assets/eecf4fc7-4d54-4a86-95e8-6b586bcf6eb8" />
 
+---
 
 ## ✨ Features
 
+- 🔐 Secure registration and login with JWT authentication
+- 🔒 BCrypt password hashing — passwords never stored in plain text
 - ➕ Add job applications with company, role, location, salary and notes
-- 📊 Real-time dashboard showing total applications, interviews, offers and rejections
+- 📊 Real-time dashboard showing total, interviews, offers and rejections
 - 🔄 Update application status — Applied → Interview → Offered → Rejected
 - ✏️ Edit any application details anytime
 - 🗑️ Delete applications
@@ -44,6 +48,7 @@ Screenshot 2:
 - 🔽 Filter by application status
 - 📅 Track the date you applied
 - 📱 Responsive design — works on mobile and desktop
+- ☁️ Deployed live on Railway with cloud MySQL database
 
 ---
 
@@ -54,6 +59,9 @@ Screenshot 2:
 |---|---|
 | Java 17 | Core programming language |
 | Spring Boot 3 | Backend framework, REST API, embedded Tomcat |
+| Spring Security | Authentication and authorization |
+| JWT (jjwt 0.11.5) | Stateless token-based authentication |
+| BCrypt | Secure password hashing |
 | Spring Data JPA | Database abstraction layer |
 | Hibernate ORM | Maps Java objects to MySQL tables |
 | MySQL | Relational database |
@@ -66,70 +74,104 @@ Screenshot 2:
 | CSS3 | Styling, responsive layout, animations |
 | JavaScript | Dynamic UI, API calls using Fetch API |
 
+### DevOps
+| Technology | Purpose |
+|---|---|
+| Git | Version control |
+| GitHub | Source code hosting |
+| Railway | Cloud deployment platform |
+
 ---
 
-## ☁️ Deployment
+## 🔐 Security Implementation
 
-This application is deployed on Railway with MySQL cloud database.
+The application uses JWT (JSON Web Token) based authentication:
 
-Deployment workflow:
+User registers → password hashed with BCrypt → saved to database
+User logs in → credentials verified → JWT token generated
+JWT token sent to client → stored in memory (not localStorage)
+Every API request → JWT sent in Authorization header
+Spring Security filter validates JWT → allows or rejects request
 
-IntelliJ IDEA → Git → GitHub → Railway CI/CD → Live Production
 
-Whenever code is pushed to GitHub, Railway automatically:
-- Pulls latest code
-- Builds the Maven project
-- Creates the JAR file
-- Deploys the latest version automatically
+### Security Flow
+POST /api/auth/register  → Create account (public)
+POST /api/auth/login     → Login and get JWT token (public)
+GET  /api/applications   → Protected — requires valid JWT token
+POST /api/applications   → Protected — requires valid JWT token
+(all other endpoints)    → Protected — requires valid JWT token
 
 ---
 
 ## 🏗️ Project Architecture
-The backend follows a clean 3-layer architecture:
-
-```text
 HTTP Request
-     ↓
+↓
+Spring Security Filter Chain
+↓ (validates JWT token)
 Controller Layer (@RestController)
-     ↓
+↓ (handles HTTP requests)
 Service Layer (@Service)
-     ↓
+↓ (business logic)
 Repository Layer (@Repository)
-     ↓
+↓ (database operations)
 MySQL Database
-```
 
 ### Project Structure
 src/main/java/com/jobtracker/job_tracker/
 ├── controller/
-│   └── JobApplicationController.java   → REST API endpoints
+│   ├── AuthController.java          → /api/auth/register, /api/auth/login
+│   └── JobApplicationController.java → /api/applications (protected)
 ├── service/
-│   └── JobApplicationService.java      → Business logic
+│   ├── AuthService.java             → Register and login logic
+│   └── JobApplicationService.java   → CRUD business logic
 ├── repository/
-│   └── JobApplicationRepository.java   → Database operations
-└── model/
-├── JobApplication.java             → Entity class
-└── ApplicationStatus.java         → Status enum
+│   ├── UserRepository.java          → User database operations
+│   └── JobApplicationRepository.java → Application database operations
+├── model/
+│   ├── User.java                    → User entity
+│   ├── JobApplication.java          → Application entity
+│   └── ApplicationStatus.java       → Status enum
+├── security/
+│   ├── SecurityConfig.java          → Security rules and configuration
+│   ├── JwtUtil.java                 → JWT generate, validate, extract
+│   ├── JwtAuthFilter.java           → Filter for every request
+│   └── CustomUserDetailsService.java → Load users from database
+├── dto/
+│   ├── RegisterRequest.java         → Registration request body
+│   ├── LoginRequest.java            → Login request body
+│   └── AuthResponse.java            → Token response
+└── exception/
+├── GlobalExceptionHandler.java   → Centralized error handling
+├── ResourceNotFoundException.java
+├── BadRequestException.java
+├── DuplicateResourceException.java
+└── ErrorResponse.java
 src/main/resources/
 ├── static/
-│   └── index.html                      → Frontend (HTML+CSS+JS)
-└── application.properties             → App configuration
+│   └── index.html                   → Complete frontend (HTML+CSS+JS)
+└── application.properties           → App configuration
 
 ---
 
 ## 🔌 REST API Endpoints
 
+### Auth Endpoints (Public)
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | /api/auth/register | Register new account |
+| POST | /api/auth/login | Login and get JWT token |
+
+### Application Endpoints (Protected — JWT Required)
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | /api/applications | Get all applications |
 | GET | /api/applications/{id} | Get application by ID |
 | POST | /api/applications | Add new application |
-| PUT | /api/applications/{id} | Update application |
+| PUT | /api/applications/{id} | Update full application |
 | PATCH | /api/applications/{id}/status | Update status only |
 | DELETE | /api/applications/{id} | Delete application |
 | GET | /api/applications/stats | Get dashboard statistics |
-| GET | /api/applications/search?keyword= | Search by company name |
-| GET | /api/applications/status/{status} | Filter by status |
+| GET | /api/applications/search | Search by company name |
 
 ---
 
@@ -155,11 +197,11 @@ CREATE DATABASE jobtracker_db;
 
 **3. Configure database credentials**
 
-Open `src/main/resources/application.properties` and update:
+Open `src/main/resources/application.properties`:
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/jobtracker_db
-spring.datasource.username=your_mysql_username
-spring.datasource.password=your_mysql_password
+spring.datasource.username=your_username
+spring.datasource.password=your_password
 ```
 
 **4. Run the application**
@@ -168,34 +210,47 @@ mvn spring-boot:run
 ```
 
 **5. Open in browser**
-
 http://localhost:8080
+
+**6. Register an account and start tracking!**
 
 ---
 
-## 🔐 Production Configuration
+## ☁️ Deployment
 
-For production deployment, sensitive credentials are managed using environment variables:
+The application is deployed on **Railway** with:
+- Spring Boot backend running as a Java service
+- MySQL database hosted on Railway
+- Environment variables for secure credential management
 
-```env
-MYSQL_URL=
-MYSQLUSER=
-MYSQLPASSWORD=
-PORT=
+Configuration uses environment variables so the same code
+works both locally and in production:
+```properties
+spring.datasource.url=${DATABASE_URL:jdbc:mysql://localhost:3306/jobtracker_db}
+spring.datasource.username=${DATABASE_USERNAME:root}
+spring.datasource.password=${DATABASE_PASSWORD:your_password}
 ```
-
-This keeps database credentials secure and prevents exposing secrets in source code.
 
 ---
 
 ## 📊 Database Schema
 
 ```sql
+-- Users table
+CREATE TABLE users (
+    id       BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name     VARCHAR(255) NOT NULL,
+    email    VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,  -- BCrypt hash
+    role     VARCHAR(50)  NOT NULL DEFAULT 'ROLE_USER'
+);
+
+-- Job Applications table
 CREATE TABLE job_applications (
     id           BIGINT AUTO_INCREMENT PRIMARY KEY,
     company_name VARCHAR(100) NOT NULL,
     job_role     VARCHAR(100) NOT NULL,
-    status       ENUM('APPLIED','INTERVIEW','OFFERED','REJECTED'),
+    status       VARCHAR(20)  NOT NULL,
     applied_date DATE,
     location     VARCHAR(100),
     salary_range VARCHAR(50),
@@ -207,32 +262,32 @@ CREATE TABLE job_applications (
 
 ## 💡 What I Learned Building This
 
-- Building REST APIs with Spring Boot following layered architecture
-- Using Spring Data JPA and Hibernate for database operations without writing raw SQL
-- Connecting a JavaScript frontend to a Java backend using Fetch API
-- HTTP methods — GET, POST, PUT, PATCH, DELETE and when to use each
-- Git version control and pushing projects to GitHub
-- Handling CORS to allow frontend-backend communication
-- Deploying Spring Boot applications to cloud platforms
-- Using environment variables for secure production configuration
-- Setting up CI/CD pipeline using GitHub + Railway
-- Debugging production API issues
+- Building REST APIs with Spring Boot following 3-layer architecture
+- Implementing JWT-based authentication with Spring Security
+- Secure password storage using BCrypt hashing
+- Using Spring Data JPA and Hibernate for database operations
+- Global exception handling with @RestControllerAdvice
+- Connecting frontend to backend using JavaScript Fetch API
+- Environment variable configuration for local and production
+- Deploying a Spring Boot application to Railway cloud platform
+- Git version control and GitHub for source code management
 
 ---
 
 ## 🚀 Future Improvements
 
-- Add user authentication with Spring Security and JWT tokens
+- Add user-specific applications (each user sees only their own)
 - Email notifications when interview is scheduled
 - Export applications to PDF or Excel
-- Add pagination for large number of applications
+- Pagination for large number of applications
+- Password reset via email
+- Google OAuth login
 
 ---
 
 ## 👤 Author
 
 **John Paul**  
-📧 johnpaulgummadi@gmail.com  
 💻 [GitHub Profile](https://github.com/John-PaulX)
 
 ---
