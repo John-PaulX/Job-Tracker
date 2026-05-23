@@ -48,7 +48,7 @@ Screenshot 2:
 - 🔽 Filter by application status
 - 📅 Track the date you applied
 - 📱 Responsive design — works on mobile and desktop
-- ☁️ Deployed live on Railway with cloud MySQL database
+- ☁️ Deployed live on Render with cloud PostgreSQL database
 
 ---
 
@@ -65,6 +65,7 @@ Screenshot 2:
 | Spring Data JPA | Database abstraction layer |
 | Hibernate ORM | Maps Java objects to MySQL tables |
 | MySQL | Relational database |
+| PostgreSQL | Production database on Render |
 | Maven | Build tool and dependency management |
 
 ### Frontend
@@ -79,7 +80,9 @@ Screenshot 2:
 |---|---|
 | Git | Version control |
 | GitHub | Source code hosting |
-| Railway | Cloud deployment platform |
+| Render | Cloud deployment platform |
+| Docker | Containerization for deployment |
+| PostgreSQL | Cloud database on Render |
 
 ---
 
@@ -115,7 +118,7 @@ Service Layer (@Service)
      ↓ (business logic)
 Repository Layer (@Repository)
      ↓ (database operations)
-MySQL Database
+Database (MySQL locally / PostgreSQL on Render)
 ```
 
 ### Project Structure
@@ -221,17 +224,22 @@ http://localhost:8080
 
 ## ☁️ Deployment
 
-The application is deployed on **Railway** with:
-- Spring Boot backend running as a Java service
-- MySQL database hosted on Railway
+The application is deployed on **Render** with:
+- Spring Boot backend running as a Docker container
+- PostgreSQL database hosted on Render
 - Environment variables for secure credential management
+- Dockerfile used for containerized deployment
 
 Configuration uses environment variables so the same code
 works both locally and in production:
 ```properties
+# Local development uses MySQL by default
 spring.datasource.url=${DATABASE_URL:jdbc:mysql://localhost:3306/jobtracker_db}
 spring.datasource.username=${DATABASE_USERNAME:root}
 spring.datasource.password=${DATABASE_PASSWORD:your_password}
+
+# On Render, DATABASE_URL is set to PostgreSQL JDBC URL
+# jdbc:postgresql://host/dbname
 ```
 
 ---
@@ -241,7 +249,7 @@ spring.datasource.password=${DATABASE_PASSWORD:your_password}
 ```sql
 -- Users table
 CREATE TABLE users (
-    id       BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id       BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name     VARCHAR(255) NOT NULL,
     email    VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,  -- BCrypt hash
@@ -272,7 +280,8 @@ CREATE TABLE job_applications (
 - Global exception handling with @RestControllerAdvice
 - Connecting frontend to backend using JavaScript Fetch API
 - Environment variable configuration for local and production
-- Deploying a Spring Boot application to Railway cloud platform
+- Deploying a Spring Boot application using Docker on Render cloud platform
+- Configuring PostgreSQL for production and MySQL for local development
 - Git version control and GitHub for source code management
 
 ---
